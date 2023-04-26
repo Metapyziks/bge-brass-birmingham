@@ -30,9 +30,7 @@ export class IndustryLevelSlot extends bge.Deck<IndustryTile> {
     }
 }
 
-@bge.width(playerboard.WIDTH)
-@bge.height(playerboard.HEIGHT)
-@bge.thickness(0.5)
+@bge.rectangleCard(playerboard.WIDTH, playerboard.HEIGHT, 0.5)
 export class PlayerBoard extends bge.Card {
     readonly industryLevels: Map<Industry, IndustryLevelSlot[]> = new Map();
 

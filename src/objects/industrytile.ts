@@ -9,10 +9,7 @@ import { IIndustryLevelData, Industry } from "../types.js";
 import { IndustryLocation } from "./industrylocation.js";
 import { ResourceToken } from "./resourcetoken.js";
 
-@bge.width(2.25)
-@bge.height(2.25)
-@bge.thickness(0.15)
-@bge.cornerRadius(0.1)
+@bge.rectangleCard(2.25, 2.25, 0.15, 0.1)
 export class IndustryTile extends bge.Card {
     readonly player: Player;
     readonly industry: Industry;

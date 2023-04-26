@@ -23,9 +23,7 @@ import { Card } from "./card.js";
 /**
  * The main board in the middle of the table.
  */
-@bge.width(gameboard.WIDTH)
-@bge.height(gameboard.HEIGHT)
-@bge.thickness(0.5)
+@bge.rectangleCard(gameboard.WIDTH, gameboard.HEIGHT, 0.5)
 export class GameBoard extends bge.Card {
     readonly game: Game;
 

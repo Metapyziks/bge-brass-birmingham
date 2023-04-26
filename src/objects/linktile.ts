@@ -3,10 +3,7 @@ import * as bge from "bge-core";
 import { Player } from "../player.js";
 import { LinkLocation } from "./linklocation.js";
 
-@bge.width(3)
-@bge.height(1.6)
-@bge.thickness(0.15)
-@bge.cornerRadius(0.8)
+@bge.rectangleCard(3, 1.6, 0.15, 0.8)
 export class LinkTile extends bge.Card {
 	readonly player: Player;
 

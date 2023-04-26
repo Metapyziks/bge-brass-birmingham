@@ -6,8 +6,7 @@ import { City, Industry, ALL_INDUSTRIES, FARM_CITIES } from "../types.js";
 import CARDS from "../data/cards.js"
 import { LinearCardContainer } from "bge-core";
 
-@bge.width(Card.WIDTH)
-@bge.height(Card.HEIGHT)
+@bge.rectangleCard(Card.WIDTH, Card.HEIGHT, 0.02, 0.35)
 export class Card extends bge.Card {
 	static readonly WIDTH = 6.3;
 	static readonly HEIGHT = 8.5;

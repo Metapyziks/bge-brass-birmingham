@@ -4,10 +4,7 @@ import { Game } from "../game.js";
 import { Player } from "../player.js";
 
 
-@bge.width(4.3)
-@bge.height(4.3)
-@bge.thickness(0.25)
-@bge.cornerRadius(2.15)
+@bge.rectangleCard(4.3, 4.3, 0.25, 2.15)
 export class PlayerToken extends bge.Card {
     readonly player: Player;
 
