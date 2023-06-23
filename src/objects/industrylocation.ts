@@ -1,5 +1,7 @@
 import * as bge from "bge-core";
 
+import { game } from "../game.js";
+
 import { IIndustryLocationData } from "../types.js";
 import { IndustryTile } from "./industrytile.js";
 
@@ -151,8 +153,6 @@ export class IndustryLocation extends bge.Zone {
             throw new Error("Tile already has a location!");
         }
 
-        const game = this._board.game;
-
         if (this._tile != null) {
             if (tile != null) {
                 console.info(`Overbuilding ${this._tile.name} in ${this.name} with ${tile.name}`);
@@ -165,7 +165,7 @@ export class IndustryLocation extends bge.Zone {
             this._tile.location = null;
             this._tile = null;
 
-            await game.delay.beat();
+            await bge.delay.beat();
         }
 
         this._tile = tile;
@@ -174,7 +174,7 @@ export class IndustryLocation extends bge.Zone {
             tile.player.addBuiltIndustry(tile);
             tile.location = this;
 
-            await game.delay.beat();
+            await bge.delay.beat();
         }
     }
 
@@ -200,8 +200,6 @@ export class IndustryLocation extends bge.Zone {
             this._tile = null;
             return;
         }
-        
-        const game = this._board.game;
 
         if (this._tile?.player.index !== state.player || this._tile?.industry !== state.industry || this._tile?.data.level !== state.level) {
             this._tile = new IndustryTile(game.players[state.player], state.industry, state.level);

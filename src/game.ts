@@ -24,7 +24,7 @@ import { endOfEraScoring } from "./actions/scoring.js";
  * @summary This class contains the meat of your game.
  * @details In this example game, players take turns discarding cards, and then either drawing from a Deck or a Hand.
  */
-export class Game extends bge.StateMachineGame<Player> {
+export class Game extends bge.Game<Player> {
 
     era: Era = Era.Canal;
     
@@ -34,7 +34,7 @@ export class Game extends bge.StateMachineGame<Player> {
     action = 0;
 
     @bge.display()
-    readonly board = new GameBoard(this);
+    readonly board = new GameBoard();
 
     @bge.display()
     readonly playerZones: bge.Zone[] = [];
@@ -70,6 +70,8 @@ export class Game extends bge.StateMachineGame<Player> {
         this.ironMarket = new ResourceMarket(this.board, Resource.Iron);
 
         this.scoreTrack = new ScoreTrack();
+
+        game = this;
     }
 
     protected override onInitialize(): void {
@@ -89,43 +91,63 @@ export class Game extends bge.StateMachineGame<Player> {
         }
     }
 
-    override get initialState(): bge.GameStateFunction {
-        return this.setup;
+    protected override async onRun(): Promise<bge.IGameResult> {
+        await this.setup();
+        await this.runEra();
+        await this.railEraStart();
+        await this.runEra();
+
+        return await this.endGame();
     }
 
-    async setup(): bge.GameState {
-        await setup(this);
+    private async runEra(): Promise<void> {
+        while (this.players.every(x => x.hand.count > 0)) {
+            await this.roundStart();
+
+            while (this.turn < this.turnOrder.length) {
+                await this.playerTurnStart();
+
+                while (this.action < this.actionsPerTurn) {
+                    await this.playerAction();
+                    this.cancelAllPromises();
+                }
+
+                await this.playerTurnEnd();
+            }
+
+            await this.roundEnd();
+        }
+
+        await this.eraEnd();
+    }
+
+    async setup(): Promise<void> {
+        await setup();
         
         this.firstRound = true;
         this.turnOrder = [...this.players];
 
-        this.random.shuffle(this.turnOrder);
-
-        return this.roundStart;
+        bge.random.shuffle(this.turnOrder);
     }
 
-    async roundStart(): bge.GameState {
+    async roundStart(): Promise<void> {
         this.turn = 0;
         
         if (!this.firstRound) {
-            await grantIncome(this, this.turnOrder);
+            await grantIncome(this.turnOrder);
         }
-
-        return this.playerTurnStart;
     }
 
-    async playerTurnStart(): bge.GameState {
+    async playerTurnStart(): Promise<void> {
         this.action = 0;
         
         this.turnStartState = this.serialize();
-
-        return this.playerAction;
     }
 
-    async playerAction(): bge.GameState {
+    async playerAction(): Promise<void> {
         this.actionStartState = this.serialize();
 
-        const result = await playerAction(this, this.currentPlayer);
+        const result = await playerAction(this.currentPlayer);
 
         switch (result) {
             case PlayerActionResult.RESOLVED:
@@ -133,57 +155,44 @@ export class Game extends bge.StateMachineGame<Player> {
 
             case PlayerActionResult.RESTART_ACTION:
                 this.deserialize(this.actionStartState);
-                return this.playerAction;
+                return;
 
             case PlayerActionResult.RESTART_TURN:
                 this.deserialize(this.turnStartState);
-                return this.playerAction;
+                return;
         }
 
         this.action++;
-
-        return this.action < this.actionsPerTurn
-            ? this.playerAction
-            : this.playerTurnEnd;
     }
 
-    async playerTurnEnd(): bge.GameState {
+    async playerTurnEnd(): Promise<void> {
         this.drawPile.dealTotal([this.currentPlayer.hand], 2, 8);
 
         this.turn++;
-
-        return this.turn < this.players.length
-            ? this.playerTurnStart
-            : this.roundEnd;
     }
 
-    async roundEnd(): bge.GameState {
+    async roundEnd(): Promise<void> {
         this.firstRound = false;
         
-        await reorderPlayers(this);
-        await resetSpentMoney(this);
+        await reorderPlayers();
+        await resetSpentMoney();
 
         if (this.players.every(x => x.hand.count > 0)) {
-            return this.roundStart;
+            return;
         }
 
-        return this.eraEnd;
+        await this.eraEnd();
     }
 
-    async eraEnd(): bge.GameState {
-        await endOfEraScoring(this);
-
-        return this.era === Era.Canal
-            ? this.railEraStart
-            : this.endGame;
+    async eraEnd(): Promise<void> {
+        await endOfEraScoring();
     }
 
-    async railEraStart(): bge.GameState {
-        await startRailEra(this);
-        return this.roundStart;
+    async railEraStart(): Promise<void> {
+        await startRailEra();
     }
 
-    async endGame(): bge.GameState {
+    async endGame(): Promise<bge.IGameResult> {
         return {
             scores: this.players.map(x => x.victoryPoints)
         };
@@ -214,3 +223,5 @@ export class Game extends bge.StateMachineGame<Player> {
         });
     }
 }
+
+export let game: Game;

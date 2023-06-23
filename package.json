@@ -8,9 +8,13 @@
     "start": "bge serve"
   },
   "devDependencies": {
-    "bge-dev": "^0.3.17"
+    "bge-dev": "^1.0.0"
   },
   "dependencies": {
-    "bge-core": "^0.3.18"
+    "bge-core": "^1.0.1"
+  },
+  "boardgameengine": {
+    "type": "game",
+    "title": "Brass Birmingham"
   }
 }

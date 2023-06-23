@@ -1,14 +1,14 @@
 import * as bge from "bge-core";
 
-import { Game } from "../game.js";
+import { game } from "../game.js";
 import { IndustryTile } from "../objects/industrytile.js";
 import { MerchantLocation } from "../objects/merchantlocation.js";
 import { ResourceToken } from "../objects/resourcetoken.js";
 import { Player } from "../player.js";
 import { SELLABLE_INDUSTRIES, City, Industry, Resource } from "../types.js";
 
-export async function sell(game: Game, player: Player) {
-    let sellOptions = getSellOptions(game, player);
+export async function sell(player: Player) {
+    let sellOptions = getSellOptions(player);
 
     if (sellOptions.length == 0) {
         await Promise.reject("Must have at least one sellable tile.");
@@ -16,15 +16,15 @@ export async function sell(game: Game, player: Player) {
 
     await player.prompt.click(new bge.Button("Sell"));
 
-    const messageRow = game.message.add("{0} is selling", player);
+    const messageRow = bge.message.add("{0} is selling", player);
 
-    await sellOnce(game, player, sellOptions, true, messageRow);
+    await sellOnce(player, sellOptions, true, messageRow);
 
     while (true) {
-        sellOptions = getSellOptions(game, player);
+        sellOptions = getSellOptions(player);
 
-        const soldAgain = await game.anyExclusive(() => [
-            sellOnce(game, player, sellOptions, false, messageRow),
+        const soldAgain = await bge.anyExclusive(() => [
+            sellOnce(player, sellOptions, false, messageRow),
             player.discardAnyCard({
                 return: false
             })
@@ -36,7 +36,7 @@ export async function sell(game: Game, player: Player) {
     }
 }
 
-async function sellOnce(game: Game, player: Player, sellOptions: ISellOption[], firstSale: boolean, messageRow: bge.MessageRow): Promise<true> {
+async function sellOnce(player: Player, sellOptions: ISellOption[], firstSale: boolean, messageRow: bge.MessageRow): Promise<true> {
     const tile = await player.prompt.clickAny(sellOptions.map(x => x.tile), {
         message: "Click on a tile to sell.",
         autoResolveIfSingle: firstSale
@@ -98,7 +98,7 @@ interface ISellOption {
     merchant: MerchantLocation;
 }
 
-function getSellOptions(game: Game, player: Player): ISellOption[] {
+function getSellOptions(player: Player): ISellOption[] {
     const sellableTiles = player.builtIndustries.filter(x => !x.hasFlipped && SELLABLE_INDUSTRIES.includes(x.industry));
 
     const sellOptions = sellableTiles.flatMap(x => {

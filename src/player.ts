@@ -1,6 +1,6 @@
 import * as bge from "bge-core";
 
-import { Game } from "./game.js";
+import { game } from "./game.js";
 import { Card, IndustryCard, CityCard } from "./objects/card.js";
 import { IndustryTile } from "./objects/industrytile.js";
 import { LinkTile } from "./objects/linktile.js";
@@ -39,7 +39,7 @@ export class Player extends bge.Player {
 
     @bge.display({ position: { x: 8.15, y: 5 }, label: "Discard" })
     @bge.display<Player>(function (ctx) { return {
-        revealedFor: this.game.firstRound && this.discardPile.count === 1 ? [this] : undefined
+        revealedFor: game.firstRound && this.discardPile.count === 1 ? [this] : undefined
     }})
     readonly discardPile = new bge.Deck(Card, { orientation: bge.CardOrientation.FACE_UP });
 
@@ -71,8 +71,6 @@ export class Player extends bge.Player {
 
     money: number = 17;
     spent: number = 0;
-
-    game: Game;
 
     /**
      * This player's total score.
@@ -174,11 +172,11 @@ export class Player extends bge.Player {
         let cities = loc instanceof LinkLocation ? loc.data.cities : [loc.city];
 
         for (let city of cities) {
-            if (this.game.board.getIndustryLocations(city).some(x => x.tile?.player === this)) {
+            if (game.board.getIndustryLocations(city).some(x => x.tile?.player === this)) {
                 return true;
             }
 
-            if (this.game.board.getNeighbouringLinks(city).some(x => x.tile?.player === this)) {
+            if (game.board.getNeighbouringLinks(city).some(x => x.tile?.player === this)) {
                 return true;
             }
         }
@@ -198,11 +196,11 @@ export class Player extends bge.Player {
                 return false;
             }
 
-            if ((slot.data.canalOnly ?? false) && this.game.era !== Era.Canal) {
+            if ((slot.data.canalOnly ?? false) && game.era !== Era.Canal) {
                 return false;
             }
             
-            if ((slot.data.railOnly ?? false) && this.game.era !== Era.Rail) {
+            if ((slot.data.railOnly ?? false) && game.era !== Era.Rail) {
                 return false;
             }
 
@@ -247,7 +245,7 @@ export class Player extends bge.Player {
 
     /*
     async discardAnyCardOrUndo(options?: IDiscardAnyCardOptions<false>): Promise<boolean> {
-        return await this.game.anyExclusive(() => [
+        return await game.anyExclusive(() => [
             this.discardAnyCard({ ...options, canAutoResolve: false, return: true }),
             this.undo()
         ]);
@@ -270,7 +268,7 @@ export class Player extends bge.Player {
                 }
             }
 
-            const lastAction = this.game.action === this.game.actionsPerTurn - 1;
+            const lastAction = game.action === game.actionsPerTurn - 1;
             const messagePostfix = lastAction ? " to end your turn" : "";
     
             discardedCard = await this.prompt.clickAny(cards, {
@@ -283,7 +281,7 @@ export class Player extends bge.Player {
 
         this.hand.setSelected(false);
 
-        this.game.message.add("{0} discards {1}", this, discardedCard);
+        bge.message.add("{0} discards {1}", this, discardedCard);
         
         await this.finishDiscardingCards([discardedCard]);
 
@@ -291,12 +289,12 @@ export class Player extends bge.Player {
     }
 
     async discardAnyCards(count: number) {
-        const lastAction = this.game.action === this.game.actionsPerTurn - 1;
+        const lastAction = game.action === game.actionsPerTurn - 1;
         const messagePostfix = lastAction ? " and End Turn" : "";
 
         while (true) {
             const remaining = count - this.hand.selected.length;
-            const clicked = await this.game.anyExclusive(() => [
+            const clicked = await bge.anyExclusive(() => [
                 this.prompt.clickAny([...this.hand].filter(x => this.hand.selected.length < count || this.hand.getSelected(x)), {
                     message: remaining === 0
                         ? "Change your selection"
@@ -316,7 +314,7 @@ export class Player extends bge.Player {
             break;
         }
         
-        this.game.message.add("{0} discards {1}", this, this.hand.selected);
+        bge.message.add("{0} discards {1}", this, this.hand.selected);
 
         await this.finishDiscardingCards(this.hand.selected);
     }
@@ -326,10 +324,10 @@ export class Player extends bge.Player {
 
         this.discardPile.addRange(cards.filter(x => !x.isWild));
 
-        this.game.wildIndustryPile.addRange(cards.filter(x => x.isWild && x instanceof IndustryCard));
-        this.game.wildLocationPile.addRange(cards.filter(x => x.isWild && x instanceof CityCard));
+        game.wildIndustryPile.addRange(cards.filter(x => x.isWild && x instanceof IndustryCard));
+        game.wildLocationPile.addRange(cards.filter(x => x.isWild && x instanceof CityCard));
 
-        await this.game.delay.beat();
+        await bge.delay.beat();
     }
     
     async confirm(): Promise<true> {
@@ -339,7 +337,7 @@ export class Player extends bge.Player {
 
     /*
     async confirmOrUndo(): Promise<boolean> {
-        return await this.game.anyExclusive(() => [
+        return await game.anyExclusive(() => [
             this.confirm(),
             this.undo()
         ]);
@@ -401,7 +399,7 @@ export class Player extends bge.Player {
         this._builtIndustries.clear();
         this._builtLinks.clear();
 
-        for (let loc of this.game.board.industryLocations) {
+        for (let loc of game.board.industryLocations) {
             if (loc.tile == null || loc.tile.player != this) {
                 continue;
             }
@@ -409,7 +407,7 @@ export class Player extends bge.Player {
             this._builtIndustries.add(loc.tile);
         }
         
-        for (let loc of this.game.board.linkLocations) {
+        for (let loc of game.board.linkLocations) {
             if (loc.tile == null || loc.tile.player != this) {
                 continue;
             }

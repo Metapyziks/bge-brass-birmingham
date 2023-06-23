@@ -3,7 +3,7 @@ import * as bge from "bge-core";
 import { IndustryLocation } from "../objects/industrylocation.js";
 import { ResourceMarket } from "../objects/resourcemarket.js";
 
-import { Game } from "../game.js";
+import { game } from "../game.js";
 import { Player } from "../player.js";
 import { Resource, Era } from "../types.js";
 
@@ -25,9 +25,9 @@ export enum PlayerActionResult {
     RESTART_TURN
 }
 
-export async function playerAction(game: Game, player: Player): Promise<PlayerActionResult> {
-    game.message.clear();
-    game.message.set("It's {0}'s turn, action {1} of {2}", player, game.action + 1, game.actionsPerTurn);
+export async function playerAction(player: Player): Promise<PlayerActionResult> {
+    bge.message.clear();
+    bge.message.set("It's {0}'s turn, action {1} of {2}", player, game.action + 1, game.actionsPerTurn);
 
     let result: PlayerActionResult;
 
@@ -45,9 +45,9 @@ export async function playerAction(game: Game, player: Player): Promise<PlayerAc
     }
 
     try {
-        await game.anyExclusive(() => {
+        await bge.anyExclusive(() => {
             // Show an undo button after the player has clicked on anything
-            game.promiseGroup.catch(async reason => {
+            bge.PromiseGroup.current.catch(async reason => {
                 try {
                     await player.prompt.click(new bge.Button("Restart Action"), {
                         order: 1000
@@ -62,14 +62,14 @@ export async function playerAction(game: Game, player: Player): Promise<PlayerAc
             });
 
             return [
-                buildIndustry(game, player),
-                buildLink(game, player),
-                takeLoan(game, player),
-                scout(game, player),
-                develop(game, player),
-                sell(game, player),
-                drainMarket(game, player, game.board.coalMarket),
-                drainMarket(game, player, game.board.ironMarket)
+                buildIndustry(player),
+                buildLink(player),
+                takeLoan(player),
+                scout(player),
+                develop(player),
+                sell(player),
+                drainMarket(player, game.board.coalMarket),
+                drainMarket(player, game.board.ironMarket)
             ];
         });
 
@@ -83,8 +83,8 @@ export async function playerAction(game: Game, player: Player): Promise<PlayerAc
     }
 }
 
-export async function startRailEra(game: Game) {
-    game.message.set("The {0} era begins!", Era[Era.Rail]);
+export async function startRailEra() {
+    bge.message.set("The {0} era begins!", Era[Era.Rail]);
 
     game.era = Era.Rail;
 
@@ -104,7 +104,7 @@ export async function startRailEra(game: Game) {
 
         game.drawPile.addRange(player.discardPile.removeAll());
 
-        await game.delay.beat();
+        await bge.delay.beat();
     }
 
     // Refill market beer
@@ -117,28 +117,28 @@ export async function startRailEra(game: Game) {
 
     // Shuffle and deal starting hands
 
-    game.drawPile.shuffle(game.random);
+    game.drawPile.shuffle();
     game.drawPile.deal(game.players.map(x => x.hand), 8);
 
-    await game.delay.beat();
+    await bge.delay.beat();
 }
 
-export async function grantIncome(game: Game, players: Player[]) {
+export async function grantIncome(players: Player[]) {
     for (let player of players) {
         if (player.income > 0) {
-            game.message.set("{0} gains £{1} of income", player, player.income);
+            bge.message.set("{0} gains £{1} of income", player, player.income);
             player.money += player.income;
 
-            await game.delay.short();
+            await bge.delay.short();
         } else if (player.income < 0) {
-            game.message.set("{0} pays £{1} in interest", player, -player.income);
+            bge.message.set("{0} pays £{1} in interest", player, -player.income);
             player.money += player.income;
             
-            await game.delay.short();
+            await bge.delay.short();
 
             while (player.money < 0) {
-                game.message.set("{0} is £{1} in debt!", player, -player.money);
-                await game.delay.beat();
+                bge.message.set("{0} is £{1} in debt!", player, -player.money);
+                await bge.delay.beat();
 
                 const builtIndustries = player.builtIndustries.filter(x => (x.data.cost.coins ?? 0) > 0);
                 if (builtIndustries.length > 0) {
@@ -147,28 +147,28 @@ export async function grantIncome(game: Game, players: Player[]) {
                         autoResolveIfSingle: true
                     });
 
-                    game.message.add("{0} sells their {1} to recover £{2}",
+                    bge.message.add("{0} sells their {1} to recover £{2}",
                         player, toSell, toSell.data.cost.coins);
 
                     toSell.location.setTile(null);
                     player.money += toSell.data.cost.coins;
-                    await game.delay.short();
+                    await bge.delay.short();
                     continue;
                 }
 
-                game.message.add("{0} loses {1} victory points as they have no built industries to sell!",
+                bge.message.add("{0} loses {1} victory points as they have no built industries to sell!",
                     player, -player.money);
 
                 player.decreaseVictoryPoints(-player.money);
                 player.money = 0;
 
-                await game.delay.short();
+                await bge.delay.short();
             }
         }
     }
 }
 
-export async function reorderPlayers(game: Game) {
+export async function reorderPlayers() {
     let tmp: Player;
 
     let successfulComparisons = 0;
@@ -191,18 +191,18 @@ export async function reorderPlayers(game: Game) {
         }
     }
     
-    await game.delay.beat();
+    await bge.delay.beat();
 }
 
-export async function resetSpentMoney(game: Game) {
+export async function resetSpentMoney() {
     for (let player of game.turnOrder) {
         player.spent = 0;
     }
 
-    await game.delay.beat();
+    await bge.delay.beat();
 }
 
-async function drainMarket(game: Game, player: Player, market: ResourceMarket) {
+async function drainMarket(player: Player, market: ResourceMarket) {
     if (!ALLOW_DRAIN_MARKETS) {
         await Promise.reject("Draining markets is disabled");
     }
@@ -239,7 +239,7 @@ export async function consumeResources(player: Player, destination: IndustryLoca
 
 		--amount;
 
-		await player.game.delay.beat();
+		await bge.delay.beat();
 	}
 
 	if (amount > 0) {
@@ -255,6 +255,6 @@ export async function consumeResources(player: Player, destination: IndustryLoca
 
 		player.spendMoney(cost);
 
-		await player.game.delay.beat();
+		await bge.delay.beat();
 	}
 }

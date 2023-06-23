@@ -15,7 +15,7 @@ import { PlayerTokenSlot } from "./playertoken.js";
 import { MerchantLocation } from "./merchantlocation.js";
 
 import { Player } from "../player.js";
-import { Game } from "../game.js";
+import { game } from "../game.js";
 import { City, Resource, MARKET_CITIES, BUILDABLE_CITIES } from "../types.js";
 import { IBoardState } from "../state.js";
 import { Card } from "./card.js";
@@ -25,8 +25,6 @@ import { Card } from "./card.js";
  */
 @bge.rectangleCard(gameboard.WIDTH, gameboard.HEIGHT, 0.5)
 export class GameBoard extends bge.Card {
-    readonly game: Game;
-
     /**
      * Array of {@link IndustryLocation}s that players can build on.
      */
@@ -46,29 +44,27 @@ export class GameBoard extends bge.Card {
     private readonly _cityLinkLocations = new Map<City, LinkLocation[]>();
 
     @bge.display({ rotation: 90, position: { x: -20.6, y: 19.7 } })
-    get drawPile() { return this.game.drawPile; }
+    get drawPile() { return game.drawPile; }
 
     @bge.display({ rotation: 90, position: { x: -20.6, y: 12 } })
-    get wildLocationPile() { return this.game.wildLocationPile; }
+    get wildLocationPile() { return game.wildLocationPile; }
 
     @bge.display({ rotation: 90, position: { x: -20.6, y: 4.4 } })
-    get wildIndustryPile() { return this.game.wildIndustryPile; }
+    get wildIndustryPile() { return game.wildIndustryPile; }
 
-    @bge.display() get coalMarket() { return this.game.coalMarket; }
-    @bge.display() get ironMarket() { return this.game.ironMarket; }
-    @bge.display() get scoreTrack() { return this.game.scoreTrack; }
+    @bge.display() get coalMarket() { return game.coalMarket; }
+    @bge.display() get ironMarket() { return game.ironMarket; }
+    @bge.display() get scoreTrack() { return game.scoreTrack; }
 
     readonly playerTokenSlots: PlayerTokenSlot[] = [];
 
-    constructor(game: Game) {
+    constructor() {
         super();
-
-        this.game = game;
 
         this.front.image = bge.Image.simple("https://iili.io/HGzqKkx.jpg");
 
         for (let i = 0; i < 4; ++i) {
-            this.playerTokenSlots[i] = new PlayerTokenSlot(game, i);
+            this.playerTokenSlots[i] = new PlayerTokenSlot(i);
             this.children.add(this.playerTokenSlots[i], {
                 position: { x: -22.65, y: -9.8 - i * 4.62 }
             });

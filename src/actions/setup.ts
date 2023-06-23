@@ -1,4 +1,6 @@
-import { Game } from "../game.js";
+import * as bge from "bge-core";
+
+import { game } from "../game.js";
 import { Card, CityCard, IndustryCard } from "../objects/card.js";
 import { LinkTile } from "../objects/linktile.js";
 import { MerchantTile } from "../objects/merchanttile.js";
@@ -7,7 +9,7 @@ import { ResourceToken } from "../objects/resourcetoken.js";
 import { ScoreTokenKind } from "../objects/scoring.js";
 import { ALL_INDUSTRIES, City, Resource } from "../types.js";
 
-export async function setup(game: Game) {
+export async function setup() {
     for (let player of game.players) {
         player.victoryPointToken = game.scoreTrack.createScoreToken(player, ScoreTokenKind.VICTORY_POINTS);
         player.incomeToken = game.scoreTrack.createScoreToken(player, ScoreTokenKind.INCOME);
@@ -22,7 +24,7 @@ export async function setup(game: Game) {
     // Merchants
     const merchantTiles = [...MerchantTile.generateDeck(game.players.length)];
 
-    game.random.shuffle(merchantTiles);
+    bge.random.shuffle(merchantTiles);
 
     for (let merchantLocation of game.board.merchantLocations) {
         if (merchantLocation.data.minPlayers > game.players.length) {
@@ -38,7 +40,7 @@ export async function setup(game: Game) {
 
     // Deal cards etc
     game.drawPile.addRange(Card.generateDeck(game.players.length));
-    game.drawPile.shuffle(game.random);
+    game.drawPile.shuffle();
 
     for (let i = 0; i < game.players.length; ++i) {
         game.wildIndustryPile.add(new IndustryCard(ALL_INDUSTRIES, 2));
@@ -48,5 +50,5 @@ export async function setup(game: Game) {
     game.drawPile.deal(game.players.map(x => x.discardPile));
     game.drawPile.deal(game.players.map(x => x.hand), 8);
 
-    await game.delay.beat();
+    await bge.delay.beat();
 }

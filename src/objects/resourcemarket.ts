@@ -231,7 +231,7 @@ export class ResourceMarket extends bge.Zone {
         source.player.money += this.getSaleValue(toSell);
         this.addRange(source.resources.splice(source.resources.length - toSell, toSell));
 
-        await source.player.game.delay.beat();
+        await bge.delay.beat();
 
         if (source.resources.length <= 0) {
             await source.flip();

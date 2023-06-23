@@ -1,4 +1,7 @@
 import * as bge from "bge-core";
+
+import { game } from "../game.js";
+
 import { LinearArrangement } from "bge-core";
 import { PlayerIndex } from "../state.js";
 
@@ -27,7 +30,7 @@ export class LinkLocation extends bge.Zone {
     }
 
     @bge.display<LinkLocation, LinkTile>(function (ctx, value) { return {
-        rotation: this._board.game.era === Era.Rail ? bge.Rotation.y(180) : undefined,
+        rotation: game.era === Era.Rail ? bge.Rotation.y(180) : undefined,
         position: value?.beingScored ? new bge.Vector3(0, 0, 2) : undefined
     }})
     get tile() { return this._tile; }
@@ -70,8 +73,6 @@ export class LinkLocation extends bge.Zone {
         if (tile?.location != null) {
             throw new Error("Tile already has a location!");
         }
-        
-        const game = this._board.game;
 
         if (this._tile != null) {
             this._tile.player.removeBuiltLink(this._tile);
@@ -79,7 +80,7 @@ export class LinkLocation extends bge.Zone {
             this._tile.location = null;
             this._tile = null;
 
-            await game.delay.beat();
+            await bge.delay.beat();
         }
 
         this._tile = tile;
@@ -88,7 +89,7 @@ export class LinkLocation extends bge.Zone {
             tile.player.addBuiltLink(tile);
             tile.location = this;
 
-            await game.delay.beat();
+            await bge.delay.beat();
         }
     }
 
@@ -108,10 +109,8 @@ export class LinkLocation extends bge.Zone {
         if (state == null) {
             return;
         }
-        
-        const game = this._board.game;
 
-        this._tile = new LinkTile(this._board.game.players[state]);
+        this._tile = new LinkTile(game.players[state]);
         this._tile.location = this;
     }
 }

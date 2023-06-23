@@ -1,5 +1,5 @@
 import * as bge from "bge-core";
-import { Game } from "../game.js";
+import { game } from "../game.js";
 
 import { Player } from "../player.js";
 
@@ -22,22 +22,19 @@ export class PlayerToken extends bge.Card {
 }
 
 export class PlayerTokenSlot extends bge.Zone {
-    private readonly _game: Game;
-
     readonly index: number;
     
     @bge.display()
     get playerToken() {
-        return this._game.turnOrder == null ? null : this._game.turnOrder[this.index]?.playerToken;
+        return game.turnOrder == null ? null : game.turnOrder[this.index]?.playerToken;
     }
 
     @bge.display({ position: { x: 4.5, y: -0.5 }, fontScale: 0.5 })
-    get moneySpent() { return this.playerToken == null || this._game.turnOrder.indexOf(this.playerToken.player) > this._game.turn ? undefined : `£${this.playerToken.player.spent}`; }
+    get moneySpent() { return this.playerToken == null || game.turnOrder.indexOf(this.playerToken.player) > game.turn ? undefined : `£${this.playerToken.player.spent}`; }
 
-    constructor(game: Game, index: number) {
+    constructor(index: number) {
         super(4, 4);
-
-        this._game = game;
+        
         this.index = index;
 
         this.outlineStyle = bge.OutlineStyle.NONE;

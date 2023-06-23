@@ -1,12 +1,12 @@
 import * as bge from "bge-core";
 
 import { City, Era, Resource } from "../types.js";
-import { Game } from "../game.js";
+import { game } from "../game.js";
 import { LinkLocation } from "../objects/linklocation.js";
 import { Player } from "../player.js";
 import { consumeResources } from "./index.js";
 
-export async function buildLink(game: Game, player: Player) {
+export async function buildLink(player: Player) {
 
 	if (player.linkTiles.count === 0) {
 		await Promise.reject("Must have link tiles remaining.")
@@ -15,11 +15,11 @@ export async function buildLink(game: Game, player: Player) {
 	let linkCost = game.era == Era.Canal ? 3 : 5;
 	let coalCost = game.era == Era.Canal ? 0 : 1;
 
-	await buildSingleLink(game, player, linkCost, coalCost, 0);
+	await buildSingleLink(player, linkCost, coalCost, 0);
 
 	if (game.era == Era.Rail) {
-		if (!await game.anyExclusive(() => [
-			buildSingleLink(game, player, 10, coalCost, 1),
+		if (!await bge.anyExclusive(() => [
+			buildSingleLink(player, 10, coalCost, 1),
 			player.discardAnyCard()
 		])) {
 			return;
@@ -29,13 +29,13 @@ export async function buildLink(game: Game, player: Player) {
 	return await player.discardAnyCard();
 }
 
-async function buildSingleLink(game: Game, player: Player, linkCost: number, coalCost: number, beerCost: number): Promise<true> {
-	const coalMarket = player.game.board.coalMarket;
+async function buildSingleLink(player: Player, linkCost: number, coalCost: number, beerCost: number): Promise<true> {
+	const coalMarket = game.board.coalMarket;
 	let marketCoalPrice = coalMarket.getCost(1);
 
-	let loc = await player.prompt.clickAny(getBuildableLinks(game, player, linkCost, coalCost, beerCost, marketCoalPrice), { message: "Click on a link!" });
+	let loc = await player.prompt.clickAny(getBuildableLinks(player, linkCost, coalCost, beerCost, marketCoalPrice), { message: "Click on a link!" });
 
-	game.message.add("{0} is building a {1} between {2}", player, player.linkTiles.top, loc.cities.map(x => City[x]));
+	bge.message.add("{0} is building a {1} between {2}", player, player.linkTiles.top, loc.cities.map(x => City[x]));
 
 	player.spendMoney(linkCost);
 	const coalSources = game.board.getResourceSources(Resource.Coal, loc);
@@ -55,7 +55,7 @@ async function buildSingleLink(game: Game, player: Player, linkCost: number, coa
 }
 
 
-function getBuildableLinks(game: Game, player: Player, cost: number, coalCost: number, beerCost: number, marketCoalPrice: number): LinkLocation[] {
+function getBuildableLinks(player: Player, cost: number, coalCost: number, beerCost: number, marketCoalPrice: number): LinkLocation[] {
 
 	return game.board.linkLocations
 		.filter(x => x.tile == null)

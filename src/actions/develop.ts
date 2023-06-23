@@ -1,10 +1,10 @@
 import * as bge from "bge-core";
-import { Game } from "../game.js";
+import { game } from "../game.js";
 
 import { ALL_INDUSTRIES, Resource } from "../types.js";
 import { Player } from "../player.js";
 
-export async function develop(game: Game, player: Player) {
+export async function develop(player: Player) {
     const ironSources = game.board.getResourceSources(Resource.Iron);
 
     if (ironSources.tiles.length === 0 && game.ironMarket.getCost(1) > player.money) {
@@ -13,13 +13,13 @@ export async function develop(game: Game, player: Player) {
 
     await player.prompt.click(new bge.Button("Develop"));
 
-    const messageRow = game.message.add("{0} is developing", player);
+    const messageRow = bge.message.add("{0} is developing", player);
 
-    await developOnce(game, player, messageRow);
+    await developOnce(player, messageRow);
     console.log(`${player.name} developed once`);
 
-    let hasDevelopedAgain = await game.anyExclusive(() => [
-        developOnce(game, player, messageRow),
+    let hasDevelopedAgain = await bge.anyExclusive(() => [
+        developOnce(player, messageRow),
         player.discardAnyCard()
     ]);
 
@@ -28,7 +28,7 @@ export async function develop(game: Game, player: Player) {
     }
 }
 
-export async function developOnce(game: Game, player: Player, messageRow?: bge.MessageRow): Promise<boolean> {
+export async function developOnce(player: Player, messageRow?: bge.MessageRow): Promise<boolean> {
     let ironSources = game.board.getResourceSources(Resource.Iron);
 
     let marketCost = game.board.ironMarket.getCost(1);
@@ -64,13 +64,13 @@ export async function developOnce(game: Game, player: Player, messageRow?: bge.M
     } else {
         slot.top.resources.push(game.board.ironMarket.take());
         player.spendMoney(marketCost);
-        await game.delay.beat();
+        await bge.delay.beat();
     }
 
     slot.top.clearResources();
     player.developedIndustries.add(player.takeNextIndustryTile(slot.industry));
 
-    await game.delay.beat();
+    await bge.delay.beat();
 
     return true;
 }

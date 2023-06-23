@@ -65,7 +65,7 @@ export class IndustryTile extends bge.Card {
         const resource = this.resources.pop();
         destination?.push(resource);
 
-        await this.player.game.delay.beat();
+        await bge.delay.beat();
 
         if (this.resources.length === 0) {
             await this.flip();
@@ -79,11 +79,11 @@ export class IndustryTile extends bge.Card {
 
         this.hasFlipped = true;
 
-        await this.player.game.delay.beat();
+        await bge.delay.beat();
 
         if (this.data.saleReward.income > 0) {
             this.player.increaseIncome(this.data.saleReward.income);
-            await this.player.game.delay.beat();
+            await bge.delay.beat();
         }
     }
 }

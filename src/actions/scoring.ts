@@ -1,17 +1,17 @@
 import * as bge from "bge-core";
 
-import { Game } from "../game.js";
+import { game } from "../game.js";
 import { City, Industry } from "../types.js";
 
-export async function endOfEraScoring(game: Game) {
-    await scoreLinks(game);
-    await scoreIndustries(game);
+export async function endOfEraScoring() {
+    await scoreLinks();
+    await scoreIndustries();
 }
 
 /***
  * Score all built links, removing them from the board and returning them to each player.
  */
-async function scoreLinks(game: Game) {
+async function scoreLinks() {
     for (let linkLoc of game.board.linkLocations) {
         linkLoc.scoredLinkPoints = linkLoc.data.cities.reduce((s, x) => s + game.board.getLinkPoints(x), 0);
     }
@@ -34,12 +34,12 @@ async function scoreLinks(game: Game) {
         const linkPoints = link.location.scoredLinkPoints;
 
         if (linkPoints > 0) {
-            game.message.set("{0} scores {1} points for their {2} between {3}!", player, linkPoints, link, link.location.cities.map(x => City[x]));
+            bge.message.set("{0} scores {1} points for their {2} between {3}!", player, linkPoints, link, link.location.cities.map(x => City[x]));
             link.beingScored = true;
-            await game.delay.beat();
+            await bge.delay.beat();
             
             link.player.increaseVictoryPoints(linkPoints);
-            await game.delay.short();
+            await bge.delay.short();
             
             link.beingScored = false;
         }
@@ -51,7 +51,7 @@ async function scoreLinks(game: Game) {
 /**
  * Score all built industries.
  */
-async function scoreIndustries(game: Game) {
+async function scoreIndustries() {
 
     let unscoredTiles = [...game.board.industryLocations.filter(x => x.tile != null).map(x => x.tile)];
 
@@ -59,13 +59,13 @@ async function scoreIndustries(game: Game) {
         if (tile.hasFlipped) {
             let victoryPoints = tile.data.saleReward.victoryPoints;
             
-            game.message.set("{0} scores {1} points for their {2} in {3}!", tile.player, victoryPoints, tile, City[tile.location.city]);
+            bge.message.set("{0} scores {1} points for their {2} in {3}!", tile.player, victoryPoints, tile, City[tile.location.city]);
 
             tile.beingScored = true;
-            await game.delay.beat();
+            await bge.delay.beat();
             
             tile.player.increaseVictoryPoints(victoryPoints);
-            await game.delay.short();
+            await bge.delay.short();
             
             tile.beingScored = false;
         }

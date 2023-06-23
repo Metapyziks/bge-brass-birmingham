@@ -1,6 +1,6 @@
 import * as bge from "bge-core";
 
-import { Game } from "../game.js";
+import { game } from "../game.js";
 import { IResourceSources } from "../objects/gameboard.js";
 import { IndustryLocation } from "../objects/industrylocation.js";
 import { ResourceToken } from "../objects/resourcetoken.js";
@@ -15,7 +15,7 @@ interface IBuildableAtLocationInfo {
 	ironSources: IResourceSources;
 }
 
-export async function buildIndustry(game: Game, player: Player) {
+export async function buildIndustry(player: Player) {
 
 	let coalAvailable = game.board.areAnyTokensAvailable(Resource.Coal);
 	let ironAvailable = game.board.areAnyTokensAvailable(Resource.Iron);
@@ -52,7 +52,7 @@ export async function buildIndustry(game: Game, player: Player) {
 		}
 	}
 
-	const messageRow = game.message.add("{0} is building an industry in {1}", player, City[loc.city]);
+	const messageRow = bge.message.add("{0} is building an industry in {1}", player, City[loc.city]);
 
 	console.info(`${player.name} clicked on ${loc.name}`);
 
@@ -106,7 +106,7 @@ export async function buildIndustry(game: Game, player: Player) {
 		loc.tile.resources.push(new ResourceToken(producedResourceType));
 	}
 
-	await game.delay.beat();
+	await bge.delay.beat();
 
 	switch (producedResourceType) {
 		case Resource.Iron:
@@ -137,9 +137,9 @@ function getBuildableIndustriesAtLocation(location: IndustryLocation, player: Pl
 	const costs: (number | string)[] = [];
 
 	// Industry locations in the same city as the one we want to build on
-	let locations = player.game.board.getIndustryLocations(location.city);
+	let locations = game.board.getIndustryLocations(location.city);
 
-	if (player.game.era == Era.Canal) {
+	if (game.era == Era.Canal) {
 		for (let loc of locations) {
 			if (loc !== location && loc.tile?.player == player) {
 				return { industries: [], costs: [] };
@@ -178,8 +178,8 @@ function getBuildableIndustriesAtLocation(location: IndustryLocation, player: Pl
 
 		const slot = player.getNextIndustryLevelSlot(industry);
 
-		const coalMarket = player.game.board.coalMarket;
-		const ironMarket = player.game.board.ironMarket;
+		const coalMarket = game.board.coalMarket;
+		const ironMarket = game.board.ironMarket;
 
 		let totalCost = slot.data.cost.coins;
 
