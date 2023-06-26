@@ -74,14 +74,14 @@ export class IndustryLocation extends bge.Zone {
         return cost;
     }
 
-    private getCostColor(player: Player, index: number, count: number): bge.Color {
+    private getCostColor(player: Player | null, index: number, count: number): bge.Color {
         const cost = this.getCostValue(index, count);
 
         if (cost == null) {
             return undefined;
         }
 
-        if (typeof cost === "number") {
+        if (typeof cost === "number" && player != null) {
             if (cost <= player.money) {
                 return bge.Color.parse("ffffff");
             }
