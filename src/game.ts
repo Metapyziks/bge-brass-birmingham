@@ -9,6 +9,7 @@ import {
     grantIncome,
     playerAction,
     PlayerActionResult,
+    removeObsoleteIndustries,
     reorderPlayers,
     resetSpentMoney,
     startRailEra
@@ -18,7 +19,7 @@ import { Card } from "./objects/card.js";
 import { ScoreTrack } from "./objects/scoring.js";
 import { IGameState } from "./state.js";
 import { setup } from "./actions/setup.js";
-import { endOfEraScoring } from "./actions/scoring.js";
+import { endOfEraScoring, scoreIndustries } from "./actions/scoring.js";
 
 /**
  * @summary This class contains the meat of your game.
@@ -27,7 +28,9 @@ import { endOfEraScoring } from "./actions/scoring.js";
 export class Game extends bge.Game<Player> {
 
     era: Era = Era.Canal;
-    
+
+    tutorialGame = false;
+
     firstRound = true;
     turnOrder?: Player[];
     turn = 0;
@@ -94,8 +97,17 @@ export class Game extends bge.Game<Player> {
     protected override async onRun(): Promise<bge.IGameResult> {
         await this.setup();
         await this.runEra();
+        await this.endOfEraScoring();
+        await this.removeObsoleteIndustries();
+
+        if (this.tutorialGame) {
+            await this.endOfTutorialScoring();
+            return await this.endGame();
+        }
+
         await this.railEraStart();
         await this.runEra();
+        await this.endOfEraScoring();
 
         return await this.endGame();
     }
@@ -117,8 +129,6 @@ export class Game extends bge.Game<Player> {
 
             await this.roundEnd();
         }
-
-        await this.eraEnd();
     }
 
     async setup(): Promise<void> {
@@ -132,7 +142,7 @@ export class Game extends bge.Game<Player> {
 
     async roundStart(): Promise<void> {
         this.turn = 0;
-        
+
         if (!this.firstRound) {
             await grantIncome(this.turnOrder);
         }
@@ -180,19 +190,72 @@ export class Game extends bge.Game<Player> {
         if (this.players.every(x => x.hand.count > 0)) {
             return;
         }
-
-        await this.eraEnd();
     }
 
-    async eraEnd(): Promise<void> {
-        await endOfEraScoring();
+    async endOfTutorialScoring(): Promise<void> {
+        bge.message.set("The tutorial game is over! Players gain 1 VP per £4 (up to 15 VP)");
+
+        await bge.delay.beat();
+
+        for (let player of this.players) {
+            const moneyPoints = Math.min(15, Math.floor(player.money / 4));
+            bge.message.add("{0} gains {1} VP", player, moneyPoints);
+            player.increaseVictoryPoints(moneyPoints);
+
+            await bge.delay.beat();
+        }
+
+        await bge.delay.beat();
+
+        bge.message.set("Players gain 1 VP per income level");
+
+        await bge.delay.beat();
+
+        for (let player of this.players) {
+            if (player.income >= 0) {
+                bge.message.add("{0} gains {1} VP", player, player.income);
+                player.increaseVictoryPoints(player.income);
+            } else {
+                bge.message.add("{0} loses {1} VP", player, -player.income);
+                player.decreaseVictoryPoints(-player.income);
+            }
+
+            await bge.delay.beat();
+        }
+
+        await bge.delay.beat();
+
+        bge.message.set("Lvl 2+ Industries are scored a second time");
+
+        await bge.delay.short();
+        await scoreIndustries();
     }
 
-    async railEraStart(): Promise<void> {
-        await startRailEra();
+    endOfEraScoring(): Promise<void> {
+        return endOfEraScoring();
+    }
+
+    removeObsoleteIndustries(): Promise<void> {
+        return removeObsoleteIndustries();
+    }
+
+    railEraStart(): Promise<void> {
+        return startRailEra();
     }
 
     async endGame(): Promise<bge.IGameResult> {
+        bge.message.set("Final scores:");
+
+        await bge.delay.beat();
+
+        const players = [...this.players];
+        players.sort((a, b) => a.victoryPoints - b.victoryPoints);
+
+        for (let player of players) {
+            bge.message.add("{0} has {1} VP{1:s}", player, player.victoryPoints);
+            await bge.delay.beat();
+        }
+
         return {
             scores: this.players.map(x => x.victoryPoints)
         };

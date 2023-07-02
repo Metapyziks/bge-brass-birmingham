@@ -83,6 +83,18 @@ export async function playerAction(player: Player): Promise<PlayerActionResult> 
     }
 }
 
+export async function removeObsoleteIndustries() {
+    bge.message.set("Obsolete industries are being removed");
+
+    for (let player of game.players) {
+        // Remove level 1 industries
+
+        for (let industry of player.builtIndustries.filter(x => x.data.level === 1)) {
+            await industry.location.setTile(null);
+        }
+    }
+}
+
 export async function startRailEra() {
     bge.message.set("The {0} era begins!", Era[Era.Rail]);
 
@@ -93,12 +105,6 @@ export async function startRailEra() {
         // Flip links to be on the rail side
 
         player.linkTiles.setOrientation(bge.CardOrientation.FACE_DOWN);
-
-        // Remove level 1 industries
-
-        for (let industry of player.builtIndustries.filter(x => x.data.level === 1)) {
-            await industry.location.setTile(null);
-        }
 
         // Return discarded cards to draw pile
 
@@ -124,17 +130,19 @@ export async function startRailEra() {
 }
 
 export async function grantIncome(players: Player[]) {
+    bge.message.set("Players gain income");
+
     for (let player of players) {
         if (player.income > 0) {
-            bge.message.set("{0} gains £{1} of income", player, player.income);
+            bge.message.add("{0} gains £{1} in income", player, player.income);
             player.money += player.income;
 
-            await bge.delay.short();
+            await bge.delay.beat();
         } else if (player.income < 0) {
-            bge.message.set("{0} pays £{1} in interest", player, -player.income);
+            bge.message.add("{0} pays £{1} in interest", player, -player.income);
             player.money += player.income;
             
-            await bge.delay.short();
+            await bge.delay.beat();
 
             while (player.money < 0) {
                 bge.message.set("{0} is £{1} in debt!", player, -player.money);

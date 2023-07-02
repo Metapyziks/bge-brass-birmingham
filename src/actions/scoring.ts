@@ -39,7 +39,7 @@ async function scoreLinks() {
             await bge.delay.beat();
             
             link.player.increaseVictoryPoints(linkPoints);
-            await bge.delay.short();
+            await bge.delay.beat();
             
             link.beingScored = false;
         }
@@ -51,7 +51,7 @@ async function scoreLinks() {
 /**
  * Score all built industries.
  */
-async function scoreIndustries() {
+export async function scoreIndustries() {
 
     let unscoredTiles = [...game.board.industryLocations.filter(x => x.tile != null).map(x => x.tile)];
 
@@ -65,7 +65,7 @@ async function scoreIndustries() {
             await bge.delay.beat();
             
             tile.player.increaseVictoryPoints(victoryPoints);
-            await bge.delay.short();
+            await bge.delay.beat();
             
             tile.beingScored = false;
         }
