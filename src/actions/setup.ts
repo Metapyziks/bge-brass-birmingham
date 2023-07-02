@@ -38,7 +38,6 @@ export async function setup() {
         }
     }
 
-    // Deal cards etc
     game.drawPile.addRange(Card.generateDeck(game.players.length));
     game.drawPile.shuffle();
 
@@ -46,6 +45,21 @@ export async function setup() {
         game.wildIndustryPile.add(new IndustryCard(ALL_INDUSTRIES, 2));
         game.wildLocationPile.add(new CityCard(City.Any, 1));
     }
+
+    bge.message.set("{0} is choosing a game length", game.players[0]);
+
+    game.tutorialGame = await bge.anyExclusive(() => [
+        game.players[0].prompt.click("Introductory Game", { return: true }),
+        game.players[0].prompt.click("Full Game", { return: false })
+    ]);
+
+    game.revealEverythingToSpectators = game.tutorialGame;
+
+    bge.message.set("{0} has chosen {1}", game.players[0], game.tutorialGame ? "Introductory Game" : "Full Game");
+
+    await bge.delay.short();
+
+    // Deal cards etc
 
     game.drawPile.deal(game.players.map(x => x.discardPile));
     game.drawPile.deal(game.players.map(x => x.hand), 8);
