@@ -1,10 +1,8 @@
 import * as bge from "bge-core";
-import { LinearArrangement, Rotation } from "bge-core";
 
 import INDUSTRIES from "../data/industrylevels.js"
 
 import { Player } from "../player.js";
-import { IIndustryTileState } from "../state.js";
 import { IIndustryLevelData, Industry } from "../types.js";
 import { IndustryLocation } from "./industrylocation.js";
 import { ResourceToken } from "./resourcetoken.js";
@@ -16,8 +14,9 @@ export class IndustryTile extends bge.Card {
     readonly data: IIndustryLevelData;
 
     @bge.display({
-        arrangement: new LinearArrangement({
-            axis: "z"
+        arrangement: new bge.PileArrangement({
+            itemRadius: 0.5,
+            localBounds: new bge.Bounds(new bge.Vector3(3, 3, 0))
         })
     })
     readonly resources: ResourceToken[] = [];
