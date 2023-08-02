@@ -15,7 +15,8 @@ export class IndustryTile extends bge.Card {
 
     @bge.display({
         arrangement: new bge.PileArrangement({
-            itemRadius: 0.5,
+            itemWidth: 0.8,
+            minQuantityForPyramid: 1,
             localBounds: new bge.Bounds(new bge.Vector3(3, 3, 0))
         })
     })
