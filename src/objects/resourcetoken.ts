@@ -25,7 +25,8 @@ export class ResourceToken extends bge.Token {
         super({
             name: Resource[resource],
             sides: resource === Resource.Beer ? 12 : 4,
-            scale: 0.75,
+            size: 0.75,
+            thickness: 0.75,
             color: ResourceToken.COLORS.get(resource)
         });
 

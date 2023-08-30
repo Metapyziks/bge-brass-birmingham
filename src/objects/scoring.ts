@@ -28,8 +28,8 @@ export class ScoreToken extends bge.Token {
     constructor(track: ScoreTrack, player: Player, kind: ScoreTokenKind) {
         super({
             sides: kind === ScoreTokenKind.INCOME ? 24 : 6,
-            thickness: 0.25,
-            scale: 1.5,
+            thickness: 0.5,
+            size: 1.5,
             color: player.color
         });
 
@@ -157,7 +157,8 @@ export class ScoreSlot extends bge.Zone {
 
     @bge.display({
         arrangement: new LinearArrangement({
-            axis: "z"
+            axis: "z",
+            jitter: true
         })
     })
     readonly tokens: ScoreToken[] = [];
