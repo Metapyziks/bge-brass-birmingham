@@ -5,7 +5,7 @@ import { IResourceSources } from "../objects/gameboard.js";
 import { IndustryLocation } from "../objects/industrylocation.js";
 import { ResourceToken } from "../objects/resourcetoken.js";
 import { Player } from "../player.js";
-import { Industry, Resource, Era, OVERBUILDABLE_INDUSTRIES, City } from "../types.js";
+import { Industry, Resource, Era, City } from "../types.js";
 import { consumeResources } from "./index.js";
 
 interface IBuildableAtLocationInfo {
@@ -193,21 +193,15 @@ function getBuildableIndustriesAtLocation(location: IndustryLocation, player: Pl
 		totalCost += ironMarket.getCost(residualIron);
 
 		if (location.tile != null && location.tile.player != player) {
-			if (!OVERBUILDABLE_INDUSTRIES.includes(location.tile.industry)) {
-				continue;
-			}
-
 			switch (location.tile.industry) {
 				case (Industry.Coal):
-					if (coalAvailable) {
-						continue;
-					}
+					if (coalAvailable) continue;
+					break;
 				case (Industry.Iron):
-					if (ironAvailable) {
-						continue;
-					}
+					if (ironAvailable) continue;
+					break;
 				default:
-					throw Error("Only coal or iron industries of another player can be overbuilt.")
+					continue;
 			}
 		}
 		
