@@ -53,21 +53,37 @@ async function scoreLinks() {
  */
 export async function scoreIndustries() {
 
-    let unscoredTiles = [...game.board.industryLocations.filter(x => x.tile != null).map(x => x.tile)];
+    const unscored = new Map(game.players
+        .map(x => [x, x.builtIndustries.filter(y => y.hasFlipped)]));
 
-    for (let tile of unscoredTiles) {
-        if (tile.hasFlipped) {
-            let victoryPoints = tile.data.saleReward.victoryPoints;
-            
-            bge.message.set("{0} scores {1} points for their {2} in {3}!", tile.player, victoryPoints, tile, City[tile.location.city]);
+    while (true) {
+        const playersWithIndustries = game.players
+            .filter(x => unscored.get(x).length > 0);
 
-            tile.beingScored = true;
-            await bge.delay.beat();
-            
-            tile.player.increaseVictoryPoints(victoryPoints);
-            await bge.delay.beat();
-            
-            tile.beingScored = false;
+        if (playersWithIndustries.length === 0) {
+            break;
         }
+
+        // Keep scoring the last-place player
+
+        const player = bge.Helpers.minBy(playersWithIndustries, x => x.victoryPoints);
+        const playerUnscored = unscored.get(player);
+
+        // Score their most valuable industry first
+
+        const tile = bge.Helpers.maxBy(playerUnscored, x => x.data.saleReward.victoryPoints);
+        const victoryPoints = tile.data.saleReward.victoryPoints;
+
+        playerUnscored.splice(playerUnscored.indexOf(tile), 1);
+
+        bge.message.set("{0} scores {1} points for their {2} in {3}!", tile.player, victoryPoints, tile, City[tile.location.city]);
+
+        tile.beingScored = true;
+        await bge.delay.beat();
+        
+        tile.player.increaseVictoryPoints(victoryPoints);
+        await bge.delay.beat();
+        
+        tile.beingScored = false;
     }
 }
